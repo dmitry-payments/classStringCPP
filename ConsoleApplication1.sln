@@ -1,31 +1,206 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.1.32228.430
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleApplication1", "ConsoleApplication1\ConsoleApplication1.vcxproj", "{CFD201A6-CCD7-4513-9653-06B396AC5AF6}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CFD201A6-CCD7-4513-9653-06B396AC5AF6}.Debug|x64.ActiveCfg = Debug|x64
-		{CFD201A6-CCD7-4513-9653-06B396AC5AF6}.Debug|x64.Build.0 = Debug|x64
-		{CFD201A6-CCD7-4513-9653-06B396AC5AF6}.Debug|x86.ActiveCfg = Debug|Win32
-		{CFD201A6-CCD7-4513-9653-06B396AC5AF6}.Debug|x86.Build.0 = Debug|Win32
-		{CFD201A6-CCD7-4513-9653-06B396AC5AF6}.Release|x64.ActiveCfg = Release|x64
-		{CFD201A6-CCD7-4513-9653-06B396AC5AF6}.Release|x64.Build.0 = Release|x64
-		{CFD201A6-CCD7-4513-9653-06B396AC5AF6}.Release|x86.ActiveCfg = Release|Win32
-		{CFD201A6-CCD7-4513-9653-06B396AC5AF6}.Release|x86.Build.0 = Release|Win32
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {A834F1AD-4337-42BB-BF10-E6347725D675}
-	EndGlobalSection
-EndGlobal
+
+#include <iostream> //подключает системные библиотеки
+#include <iomanip> // манипцляции ввода-вывода
+using namespace std; //пространство имен
+//#define _CRT_SECURE_NO_WARNINGS
+
+class String {
+private:
+	char* _data;
+	int _len;
+	String(int len, char* data) {
+		_len = len;
+		_data = data;
+	}
+	void initStr(const char* data, int len) {
+		_len = len;
+		_data = new char[_len + 1];
+		strncpy_s(_data, _len + 1, data, _len);
+	}
+public:
+	String() {
+		_len = 0;
+		_data = new char[1];
+		_data[0] = 0;//*(_data + 0) = 0
+	}
+	String(const char* str) {
+		initStr(str, strlen(str));
+	}
+	String(const String& str) {
+		/*_len = str._len;
+		_data = new char[_len + 1];
+		for (int i = 0; i < _len; i++) {
+			_data[i] = str._data[i];
+		}
+		_data[_len] = 0;*/
+		initStr(str._data, str._len);
+	}
+	String(const int ar) {
+		char temp[255];
+		_itoa_s(ar, temp, 10);
+		initStr(temp, strlen(temp));
+	}
+	~String() {
+		if (_data != nullptr) {
+			delete[] _data;
+			_data = nullptr;
+		}
+	}
+	String& operator=(const String& str) {
+		if (this == &str) //test1 = test1
+			return *this;
+		delete[] _data;
+		_data = new char[str._len + 1];
+		for (int i = 0; i < str._len; i++) {
+			_data[i] = str._data[i];
+		}
+		_data[str._len] = 0;
+		_len = str._len;
+		return *this;
+		/*int* a = new int(5);
+		int* b = new int[5];
+		int c = *a;
+		int d = *b;*/
+	}
+	void setChar(char c, int n) {
+		_data[n] = c;
+	}
+	char* getData() const {
+		return _data;
+	}
+	int getLength() const {
+		return _len;
+	}
+	String toLowerCase() {
+		char* newData = new char[_len + 1];
+		for (int i = 0; i < _len; i++) {
+			newData[i] = tolower(_data[i]);
+		}
+		newData[_len] = 0;
+		return String(_len, newData);
+	}
+	String toUpperCase() {
+		char* newData = new char[_len + 1];
+		for (int i = 0; i < _len; i++) {
+			newData[i] = toupper(_data[i]);
+		}
+		newData[_len] = 0;//последний элемент
+		return String(_len, newData);
+	}
+	String concatenation(const String& b) {
+		int l = _len + b.getLength();
+		char* newData = new char[l + 1];
+		int i = 0;
+		for (; i < _len; i++) {
+			newData[i] = _data[i];
+		}
+		for (; i < l; i++) {
+			newData[i] = b._data[i-_len];
+		}
+		newData[l] = 0;
+		return String(l, newData);
+	}
+	String clone() {
+		return String(_data);
+	}
+	static String join(const char* d, const int* ar, int lenAr) {
+		int strLen = strlen(d) * (lenAr - 1); //12+-235+-3666
+		char temp[255];
+		for (int i = 0; i < lenAr; i++) {
+			_itoa_s(ar[i], temp, 10);
+			strLen += strlen(temp);
+		}
+		char* newData = new char[strLen + 1];
+		char* pt = newData;
+		_itoa_s(ar[0], temp, 10);
+		strncpy_s(pt, strLen + 1, temp, strlen(temp));
+		pt += strlen(temp);
+		int tl = strLen + 1 - strlen(temp);
+		for (int i = 1; i < lenAr; i++) {
+			strncpy_s(pt, tl, d, strlen(d));
+			pt += strlen(d);
+			tl -= strlen(d);
+			_itoa_s(ar[i], temp, 10);
+			strncpy_s(pt, tl, temp, strlen(temp));
+			pt += strlen(temp);
+			tl -= strlen(temp);
+		}
+		//*pt = 0;
+		return String(strLen, newData);
+	}
+	static String join1(const char* d, const int* ar, int lenAr) {
+		//char temp[255];
+		//_itoa_s(ar[0], temp, 10);
+		String res = ar[0];
+		String ds = d;
+		for (int i = 1; i < lenAr; i++) {
+			res = res.concatenation(ds);
+			//String is = ar[i];
+			res = res.concatenation(ar[i]); //res = res.concatenation((String) ar[i])
+		}
+		return res;
+	}
+	bool equal(const String& str) {
+		return equal(str._data);
+	}
+	bool equal(const char* d) {
+		if (strlen(_data) != strlen(d)) 
+			return false;
+		for (int i = 0; i < strlen(_data); i++) {
+			if (_data[i] != d[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+};
+
+int main()
+{   
+	
+	//String test = "aaa";
+	//cout << test.getData() << endl;
+	//cout << test.getLength() << endl;
+
+	//String test1 = "bbb";
+
+	//String test2 = test.toUpperCase();
+	//cout << test2.getData() << endl;
+	//cout << test2.getLength() << endl;
+
+	//String test3 = test.concatenation(test1);
+	//cout << test3.getData() << endl;
+
+	//test = test1;
+	//cout << test.getData() << endl;
+	//String clone = test.clone();
+	//cout << clone.getData() << endl;
+
+	int b[] = { 1,2,3 };
+	//int c[4];
+	String s = String::join("-", b, 3);
+	cout << s.getData() << endl;
+	char t[] = { '1', '2', '3'};
+
+	/*if (strcmp(s.getData(), "1-22-3")) {
+		cout << "yes" << endl;
+	}
+	else
+	{
+		cout << "no" << endl;
+	}*/
+
+	//String test4 = test1; // String test4(test1)
+	//test4.setChar('?', 0);
+	//cout << test4.getData() << endl;
+	//cout << test1.getData() << endl;
+
+	//int a = 65536;
+	//short* pa = (short*) &a;
+	//cout << pa[0] << " " << pa[1] << endl;
+
+	system("pause");
+}
+
+
+
